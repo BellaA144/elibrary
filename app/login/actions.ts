@@ -72,7 +72,7 @@ export async function signup(formData: FormData) {
     return { success: false, message: "Could not sign up" };
   }
 
-  revalidatePath('/', 'layout');
+  revalidatePath('/login', 'layout');
 
   return { success: true, message: "Signup successful! Please check your email for verification." };
 }

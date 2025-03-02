@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [books, setBooks] = useState<BookData[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'add' | 'list'>('list');
+  const [user, setUser] = useState<any>(null);
 
   async function fetchBooks() {
     setLoading(true);
@@ -35,6 +36,19 @@ export default function AdminPage() {
     }
     setLoading(false);
   }
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+      }
+      if (error) {
+        console.log("Error fetching user:", error.message);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     fetchBooks();

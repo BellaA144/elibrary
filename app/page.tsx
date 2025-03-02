@@ -28,6 +28,22 @@ export default function BooksPage() {
   const [loading, setLoading] = useState(true);
   const limit = 4; // Buku per halaman
   const [loans, setLoans] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+      }
+      if (error) {
+        console.log("Error fetching user:", error.message);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  console.log("user:", user);
 
   useEffect(() => { // buat ngeload buku
     async function loadBooks() {
