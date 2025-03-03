@@ -53,7 +53,8 @@ export default function LoginPage() {
         refresh_token: data.refresh_token,
       });
   
-      setSuccess("Login successful!");
+      setSuccess("✅ Login successful!");
+      console.log("User Role" + data.role);
   
       // ✅ REDIRECT BERDASARKAN ROLE
       router.replace(data.role === "admin" ? "/admin" : "/");
@@ -67,24 +68,39 @@ export default function LoginPage() {
   };
   
   const handleSignup = async () => {
-    const formData = new FormData();
-    formData.append(
-      "email",
-      (document.getElementById("email") as HTMLInputElement)?.value || ""
-    );
-    formData.append(
-      "password",
-      (document.getElementById("password") as HTMLInputElement)?.value || ""
-    );
-
-    const result = await signup(formData);
-
-    if (result.success) {
-      setSuccess(result.message);
-    } else {
-      setError(result.message);
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+  
+    if (!email || !password) {
+      setError("Email and password are required.");
+      setLoading(false);
+      return;
     }
-  };
+  
+    try {
+      console.log("🔄 Starting signup with:", { email, password });
+  
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
+  
+      const result = await signup(formData);
+  
+      console.log("✅ Signup result:", result);
+  
+      if (result.success) {
+        setSuccess(result.message);
+      } else {
+        setError(result.message);
+      }
+    } catch (err: any) {
+      console.error("❌ Signup error:", err.message || err);
+      setError("Unexpected error occurred during signup.");
+    }
+  
+    setLoading(false);
+  };  
 
   return (
     <div
@@ -102,6 +118,7 @@ export default function LoginPage() {
             >
             <label>Email</label>
             <input
+                id="email"
                 className="bg-slate-200 border border-slate-600 rounded-md p-1"
                 type="email"
                 value={email}
@@ -114,6 +131,7 @@ export default function LoginPage() {
             <label>Password</label>
             <div className="relative">
                 <input
+                id="password"
                 className="bg-slate-200 border border-slate-600 rounded-md p-1 w-full pr-10"
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -146,8 +164,9 @@ export default function LoginPage() {
           <button
             className="underline text-slate-800"
             onClick={handleSignup}
+            disabled={loading}
           >
-            Sign up
+            {loading ? "Signing up..." : "Sign up"}
           </button>
         </div>
       </div>

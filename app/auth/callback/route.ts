@@ -1,3 +1,5 @@
+"use server"
+
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { type CookieOptions, createServerClient } from '@supabase/ssr'
@@ -5,7 +7,6 @@ import { type CookieOptions, createServerClient } from '@supabase/ssr'
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    // if "next" is in param, use it as the redirect URL
     const next = searchParams.get('next') ?? '/'
 
     if (code) {
@@ -27,12 +28,23 @@ export async function GET(request: Request) {
                 },
             }
         )
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-            return NextResponse.redirect(`${origin}${next}`)
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        if (exchangeError) {
+            console.error("❌ Error exchanging code:", exchangeError.message)
+            return NextResponse.redirect(`${origin}/login?message=Could not login with provider`)
         }
+
+        // ✅ Cek session setelah exchange
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError || !sessionData.session) {
+            console.error("❌ No session after exchange:", sessionError)
+            return NextResponse.redirect(`${origin}/login?message=Session failed`)
+        }
+
+        console.log("✅ Session after exchange:", sessionData.session)
+
+        return NextResponse.redirect(`${origin}${next}`)
     }
 
-    // return the user to an error page with instructions
     return NextResponse.redirect(`${origin}/login?message=Could not login with provider`)
 }

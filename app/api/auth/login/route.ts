@@ -1,3 +1,5 @@
+"use server";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
@@ -25,6 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       access_token: data.session?.access_token,
       refresh_token: data.session?.refresh_token,
+      role: data.user?.user_metadata.role,
     });
   } catch (err: any) {
     console.error('[API] Internal Error:', err.message || err);

@@ -43,8 +43,6 @@ export default function BooksPage() {
     fetchUser();
   }, []);
 
-  console.log("user:", user);
-
   useEffect(() => { // buat ngeload buku
     async function loadBooks() {
       setLoading(true);
@@ -168,7 +166,7 @@ export default function BooksPage() {
               </div>
           
               {/* Book List with Suspense */}
-              <SuspenseWrapper>
+              <SuspenseWrapper >
                 {books.length > 0 ? <BookList books={books} /> : <p className="text-center text-white">No books found.</p>}
               </SuspenseWrapper>
           

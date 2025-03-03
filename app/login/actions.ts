@@ -61,20 +61,36 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient();
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  };
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
 
-  const { error } = await supabase.auth.signUp(data);
+  console.log("Signup attempt with:", { email, password });
 
-  if (error) {
-    return { success: false, message: "Could not sign up" };
+  if (!email || !password) {
+    console.error("Missing email or password");
+    return { success: false, message: "Email and password are required." };
   }
 
-  revalidatePath('/login', 'layout');
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-  return { success: true, message: "Signup successful! Please check your email for verification." };
+    if (error) {
+      console.error("SignUp Error:", error.message);
+      return { success: false, message: error.message };
+    }
+
+    console.log("SignUp Success:", data);
+
+    revalidatePath('/login', 'layout');
+
+    return { success: true, message: "Signup successful! Please check your email for verification." };
+  } catch (err: any) {
+    console.error("Unexpected Error:", err.message);
+    return { success: false, message: "Unexpected error during signup." };
+  }
 }
 
 

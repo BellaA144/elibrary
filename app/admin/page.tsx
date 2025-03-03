@@ -6,6 +6,7 @@ import AddBookForm from "./addBookForm";
 import { Button, CircularProgress } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import ListBooks from "./listBooks";
+import { red } from "@mui/material/colors";
 
 type BookData = {
   bookid: string;
@@ -41,14 +42,19 @@ export default function AdminPage() {
     const fetchUser = async () => {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (user) {
-        setUser(user);
+        if (user.user_metadata.role !== "admin") {
+          router.replace("/");
+        } else {
+          setUser(user);
+        }
       }
       if (error) {
         console.log("Error fetching user:", error.message);
+        router.replace("/login");
       }
     };
     fetchUser();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     fetchBooks();

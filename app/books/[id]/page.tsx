@@ -1,14 +1,10 @@
-import { fetchBookDetail } from "@/app/books/actions";
-import { Button, Card, CardContent, CardMedia, CircularProgress, Typography } from "@mui/material";
-import { notFound } from "next/navigation";
+// books/[id]/page.tsx
+import BookDetail from "./bookDetail";
+import { Button, CircularProgress } from "@mui/material";
 import { Suspense } from "react";
 
 export default async function BookDetailPage({ params }: { params: { id: string } }) {
-  const book = await fetchBookDetail(params.id);
-
-  if (!book) {
-    return notFound();
-  }
+  const id = params.id; // Ini cukup, karena page udah async
 
   return (
     <div>
@@ -41,23 +37,7 @@ export default async function BookDetailPage({ params }: { params: { id: string 
         <div className="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
         <div className="bg-white/30 backdrop-blur-md p-6 z-10 w-[50vw] rounded shadow-lg">
           <Suspense fallback={<CircularProgress />}>
-            <Card sx={{ display: "flex", flexDirection: "column", alignItems: "center", p: 3 }}>
-              <CardMedia
-                component="img"
-                height="250"
-                image={book.cover_url || "https://via.placeholder.com/250x350"}
-                alt={book.title}
-                sx={{ width: "200px", borderRadius: "8px", mb: 3 }}
-              />
-              <CardContent className="text-center">
-                <Typography variant="h4" className="font-bold mb-2">{book.title}</Typography>
-                <Typography variant="h6" color="text.secondary">Author: {book.author}</Typography>
-                <Typography variant="body1" color="text.secondary">Category: {book.category}</Typography>
-                <Typography variant="body2" className="mt-4">
-                  {book.description || "No description available."}
-                </Typography>
-              </CardContent>
-            </Card>
+            <BookDetail id={id} />
           </Suspense>
         </div>
       </div>
