@@ -44,14 +44,14 @@ export default function BookList({ books }: { books: Book[] }) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {books.length > 0 ? (
           books.map((book) => (
-            <Card key={book.bookid} sx={{ maxWidth: 250 }}>
+            <Card sx={{ maxWidth: 250, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
               <CardMedia
                 component="img"
                 height="140"
                 image={book.cover_url || "https://via.placeholder.com/140x200"}
                 alt={book.title}
               />
-              <CardContent className="flex flex-col h-30">
+              <CardContent sx={{ flexGrow: 1 }}>
                 <Typography 
                   gutterBottom 
                   variant="h6" 
@@ -63,30 +63,32 @@ export default function BookList({ books }: { books: Book[] }) {
                 <Typography variant="body2" color="text.secondary">Author: {book.author}</Typography>
                 <Typography variant="body2" color="text.secondary">Category: {book.category}</Typography>
               </CardContent>
-              {book.available ? (
-                <Button 
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleLoan(book.bookid)}
-                  disabled={loading === book.bookid}
-                  className="left-4 bottom-2"
-                  sx={{ 
-                    bgcolor: "rgb(146, 64, 14)", 
-                    "&:hover": { bgcolor: "rgb(120, 50, 10)" }, 
-                    "&.Mui-disabled": { bgcolor: "gray", color: "white" } 
-                  }}
-                >
-                  {loading === book.bookid ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    "Borrow"
-                  )}
-                </Button>
-              ) : (
-                <Typography variant="body2" color="error" className="mt-2 ml-4">
-                  Not Available
-                </Typography>
-              )}
+
+              <CardContent sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", p: 2 }}>
+                {book.available ? (
+                  <Button 
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleLoan(book.bookid)}
+                    disabled={loading === book.bookid}
+                    sx={{ 
+                      bgcolor: "rgb(146, 64, 14)", 
+                      "&:hover": { bgcolor: "rgb(120, 50, 10)" }, 
+                      "&.Mui-disabled": { bgcolor: "gray", color: "white" } 
+                    }}
+                  >
+                    {loading === book.bookid ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      "Borrow"
+                    )}
+                  </Button>
+                ) : (
+                  <Typography variant="body2" color="error">
+                    ❌ Not Available
+                  </Typography>
+                )}
+              </CardContent>
             </Card>
           ))
         ) : (

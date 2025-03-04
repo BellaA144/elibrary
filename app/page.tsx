@@ -7,6 +7,8 @@ import {
   Typography,
   TextField,
   MenuItem,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { fetchBooks, fetchCategories, fetchLoans } from "@/app/books/actions";
 import BookList from "@/app/components/BookList";
@@ -29,19 +31,28 @@ export default function BooksPage() {
   const limit = 4; // Buku per halaman
   const [loans, setLoans] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
-      }
-      if (error) {
-        console.log("Error fetching user:", error.message);
+      if (!accessToken) return; // Tunggu token sebelum fetch user
+
+      try {
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error) throw error;
+
+        setUser(data.user);
+      } catch (error: any) {
+        console.error("Error fetching user:", error.message);
       }
     };
+
     fetchUser();
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => { // buat ngeload buku
     async function loadBooks() {
@@ -81,6 +92,34 @@ export default function BooksPage() {
   }
 
   
+  const handleReturnBook = async (loanId: any) => {
+    console.log("Returning book with ID:", loanId);
+    try {
+      const response = await fetch(`/api/loans/${loanId}`, { // app\api\loans\[id]
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      const data = await response.json();
+      if (response.ok) {
+        setSnackbarMessage("Buku berhasil dikembalikan!");
+        setSnackbarSeverity("success");
+        setOpenSnackbar(true);
+        router.refresh(); // 🔄 Refresh data setelah update
+      } else {
+        setSnackbarMessage(`Gagal mengembalikan buku: ${data.error}`);
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      console.error("Error returning book:", error);
+      setSnackbarMessage("Terjadi kesalahan saat mengembalikan buku!");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    }
+  };
+  
+
   return (
     <div>
       {/* Sidebar Navbar */}
@@ -216,7 +255,14 @@ export default function BooksPage() {
                         <td className="py-2 px-4">{loan.users?.email || "Other Users"}</td>
                         <td className="py-2 px-4">{loan.books?.title || "Unknown Title"}</td>
                         <td className="py-2 px-4">{new Date(loan.loan_date).toLocaleDateString()}</td>
-                        <td className="py-2 px-4">{loan.loan_return ? new Date(loan.loan_return).toLocaleDateString() : "Not Returned"}</td>
+                        <td className="py-2 px-4">{loan.loan_return ? new Date(loan.loan_return).toLocaleDateString() : (
+                          <button
+                            onClick={() => handleReturnBook(loan.loanid)}
+                            className="bg-[rgb(146,64,14)] text-white px-3 py-1 rounded"
+                          >
+                            Return
+                          </button>
+                        )}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -225,6 +271,16 @@ export default function BooksPage() {
             </>
           )}                      
         </div>
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={3000}
+          onClose={() => setOpenSnackbar(false)}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert onClose={() => setOpenSnackbar(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </div>
     </div>
   );

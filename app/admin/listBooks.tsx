@@ -2,7 +2,20 @@
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEffect, useState } from "react";
-import { Button, Card, CardContent, Typography, CircularProgress, Snackbar, Alert } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import EditBookForm from "./editBookForm";
 
 type BookData = {
@@ -13,6 +26,7 @@ type BookData = {
   published_year: number;
   description: string;
   cover_url: string;
+  available: boolean;
 };
 
 export default function ListBooks() {
@@ -24,26 +38,29 @@ export default function ListBooks() {
   const [editBook, setEditBook] = useState<BookData | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const limit = 4;
 
   async function fetchBooks() {
     setLoading(true);
     const start = (page - 1) * limit;
     const end = start + limit - 1;
-
+    
     const { data, error } = await supabase
-      .from("books")
-      .select("bookid, title, author, category, published_year, description, cover_url", { count: "exact" })
-      .order("published_year", { ascending: false })
-      .range(start, end);
+    .from("books")
+    .select("bookid, title, author, category, published_year, description, cover_url, available", { count: "exact" })
+    .order("published_year", { ascending: false })
+    .range(start, end);
 
+    
     if (error) {
       console.error("Error fetching books:", error.message);
       setBooks([]);
     } else {
       setBooks(data || []);
     }
-
+    
     const { count, error: countError } = await supabase.from("books").select("*", { count: "exact", head: true });
 
     if (countError) {
@@ -59,10 +76,20 @@ export default function ListBooks() {
     fetchBooks();
   }, [page]);
 
-  async function handleDeleteBook(bookid: string) {
-    if (!confirm("⚠️ Apakah kamu yakin ingin menghapus buku ini?")) return;
+  const handleOpenDialog = (bookid: string) => {
+    setSelectedBookId(bookid);
+    setOpenDialog(true);
+  };
 
-    const { error } = await supabase.from("books").delete().eq("bookid", bookid);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedBookId(null);
+  };
+
+  async function handleDeleteBook() {
+    if (!selectedBookId) return;
+
+    const { error } = await supabase.from("books").delete().eq("bookid", selectedBookId);
 
     if (error) {
       setSnackbarMessage(`Gagal menghapus buku: ${error.message}`);
@@ -72,6 +99,8 @@ export default function ListBooks() {
       setSnackbarType("success");
       fetchBooks();
     }
+
+    handleCloseDialog();
   }
 
   return (
@@ -95,14 +124,14 @@ export default function ListBooks() {
                   ✍️ {book.author} - 📃 {book.published_year}
                 </Typography>
                 <Typography variant="body2" className="text-gray-700">
-                  {book.category}
+                  📑 {book.category} - {book.available ? "✅ Available" : "❌ Booked"}
                 </Typography>
 
                 <div className="flex justify-between mt-auto">
                   <Button variant="outlined" color="primary" onClick={() => setEditBook(book)}>
                     ✏️ Edit
                   </Button>
-                  <Button variant="outlined" color="error" onClick={() => handleDeleteBook(book.bookid)}>
+                  <Button variant="outlined" color="error" onClick={() => handleOpenDialog(book.bookid)} disabled={!book.available}>
                     🗑 Delete
                   </Button>
                 </div>
@@ -139,6 +168,18 @@ export default function ListBooks() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      {/* Dialog Konfirmasi Hapus */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Delete Confirmation</DialogTitle>
+        <DialogContent>
+          <DialogContentText>⚠️ You sure want to delete this book ?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">Cancel</Button>
+          <Button onClick={handleDeleteBook} color="error" autoFocus>Delete</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

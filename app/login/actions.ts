@@ -95,6 +95,8 @@ export async function signup(formData: FormData) {
 
 
 export async function oAuthSignIn(provider: Provider) {
+  console.log("🔍 Attempting OAuth sign-in with provider:", provider);
+  
   if (!provider) {
     return { success: false, message: "Provider not found" };
   }

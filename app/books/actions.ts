@@ -55,6 +55,7 @@ export async function fetchLoans() {
   const { data, error } = await supabase
     .from("loans")
     .select(`
+      loanid,
       books (title),
       users (email),
       loan_date,

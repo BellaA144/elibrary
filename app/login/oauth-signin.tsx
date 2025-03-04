@@ -21,7 +21,7 @@ type OAuthProvider = {
 
     const oAuthProviders: OAuthProvider[] = [
       {
-        name: "github",
+        name: "github" as Provider,
         displayName: "GitHub",
         icon: <GitHub className="size-5" />,
       },

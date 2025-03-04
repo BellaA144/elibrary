@@ -6,7 +6,6 @@ import AddBookForm from "./addBookForm";
 import { Button, CircularProgress } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import ListBooks from "./listBooks";
-import { red } from "@mui/material/colors";
 
 type BookData = {
   bookid: string;
@@ -62,12 +61,12 @@ export default function AdminPage() {
 
   async function handleSignOut() {
     console.log("Signing out...");
-    await router.replace('/api/logout'); // Ensure the sign-out process completes
+    await router.replace('/api/logout'); 
 
-    // Give time for cookies to be cleared properly before redirecting
+    
     setTimeout(() => {
-        router.push('/login'); // After a short delay, send the user to the login page
-    }, 500); // 500ms delay to ensure cookies are cleared
+        router.push('/login'); 
+    }, 500);
   }
 
   return (

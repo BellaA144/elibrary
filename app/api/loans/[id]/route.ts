@@ -3,14 +3,22 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = await createClient();
-    
+export async function PUT(req: NextRequest, context: { params?: { id?: string } }) {
+  const id = context.params?.id;
+
+  console.log("Received Loan ID in API:", id); // Debugging ID dari request
+
+  if (!id) {
+    return NextResponse.json({ error: "Loan ID tidak ditemukan dalam parameter." }, { status: 400 });
+  }
+
+  const supabase = await createClient(); // ✅ Pastikan ini ada `await`
+  
   // Cek apakah loan valid dan belum dikembalikan
   const { data: loan, error: loanError } = await supabase
-    .from('loans')
-    .select('bookid, loan_return')
-    .eq('loanid', params.id)
+    .from("loans")
+    .select("bookid, loan_return")
+    .eq("loanid", id)
     .single();
 
   if (loanError || !loan) {
@@ -23,19 +31,19 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   // Update loan_return sebagai waktu pengembalian
   const { error: updateLoanError } = await supabase
-    .from('loans')
+    .from("loans")
     .update({ loan_return: new Date().toISOString() })
-    .eq('loanid', params.id);
+    .eq("loanid", id);
 
   if (updateLoanError) {
-    return NextResponse.json({ error: updateLoanError.message }, { status: 400 });
+    return NextResponse.json({ error: "Gagal memperbarui data peminjaman." }, { status: 400 });
   }
 
   // Update status buku menjadi tersedia kembali
   const { error: updateBookError } = await supabase
-    .from('books')
+    .from("books")
     .update({ available: true })
-    .eq('bookid', loan.bookid);
+    .eq("bookid", loan.bookid);
 
   if (updateBookError) {
     return NextResponse.json({ error: "Gagal memperbarui status buku." }, { status: 500 });
